@@ -1,0 +1,28 @@
+Lane,
+
+Bubbling this up once more. Since my last note the provisional patent has been filed, so I can share the deck and data room with DCVC as soon as they're interested.
+
+Two easy options:
+1. Forward the updated blurb below to your DCVC contact, or
+2. Tell me who you have in mind and I'll write to them directly and mention you, so all you need to do is give them a heads up.
+
+Either way, who at DCVC are you thinking of? Knowing that lets me tailor the note.
+
+Still keen on the Dan Williams intro as well whenever you have a moment. Bonnie (cc'd) will handle scheduling.
+
+Best,
+Phil
+
+Phillip Williams, MD
+Founder & CEO, Vaeros, Inc.
+m: 347.933.3454 | vaeros.ai
+
+[UPDATED FORWARDABLE BLURB]
+
+Vaeros is building the human readiness data layer for CJADC2. Palantir's Maven tracks where the Department's assets are; Vaeros tracks which operators are fit to run them, turning standard video into a FHIR R4-native Tactical Readiness Score (TRS).
+
+- Tradewinds Awardable (September 2026), positioning Vaeros for sole-source OTA awards
+- Palantir Defense SDK acquired for Maven ontology mapping; Second Front MNDA executed for Game Warden (IL4/IL5) deployment
+- Layer 1 kinematic extraction demonstrated at TRL 6; patent pending (filed October 2026)
+
+The founder and CEO, Phillip Williams, MD, trained at Harvard Medical School, HSS and Kerlan-Jobe. Vaeros is raising a $2M Seed to fund the Game Warden deployment and Palantir integration build. Happy to make an introduction.
