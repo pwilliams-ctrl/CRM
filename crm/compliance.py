@@ -16,18 +16,23 @@ import re
 _ALLOWED_PHRASES = ["Harvard Medical School"]
 
 _PROHIBITED_TERMS = {
-    r"clinic(al|ally|ian|ians|s)?": "prohibited lexicon term (use: readiness / validation / orthopedic ground truth)",
+    r"clinic(al|ally|ian|ians|s)?": "prohibited lexicon term (use: readiness data layer)",
     r"medical(ly)?": "prohibited lexicon term (Vaeros is an AI software and data analytics company)",
-    r"health ?care": "prohibited lexicon term",
-    r"patients?": "prohibited lexicon term (use: operators / service members / athletes)",
-    r"diagnos(is|es|e|tic|tics)": "prohibited lexicon term (use: readiness / risk index)",
+    r"health ?care|health services": "prohibited lexicon term (use: readiness / human performance data)",
+    r"patients?": "prohibited lexicon term (use: operator)",
+    r"diagnos(is|es|e|tic|tics)": "prohibited lexicon term (use: readiness score / kinematic finding)",
+    r"bias mitigation|fairness|DEI": "Brand Standard 3: use cross-cohort kinematic validity / readiness accuracy",
+    r"dashboards?|platform UI": "Brand Standard 3: Vaeros is a data layer, payload or feed",
+    r"Baylor|BCM": "Brand Standard 3: no academic-institution affiliation in Vaeros material",
 }
+# Case-sensitive: "DoD" survives only in citations; display copy says "the Department".
+_DOD = re.compile(r"\bDoD\b")
 
 _TRL_OVERCLAIMS = {
     r"\barchitected\b": "TRL lock: Layer 2 is 'underway', never 'architected'",
     r"\b(IL[45](/IL[45])?|Game Warden)\b[^.\n]{0,40}\b(authorized|accredited|certified|live)\b":
         "TRL lock: Layer 2 / Game Warden is underway, not authorized",
-    r"\bvalidated (on|in|with|across) (military|service members|warfighters)":
+    r"(?<!not )(?<!not yet )\bvalidated (on|in|with|across) (military|service members|warfighters)":
         "TRL lock: the predictive model is NOT yet validated on military populations",
     r"\b(integrated (with|into) Maven|Maven integration (is )?(complete|live|done))":
         "TRL lock: SDK/MNDA are access instruments, not integration claims",
@@ -51,6 +56,11 @@ def check(subject: str, body: str, recipients: list[str] | tuple[str, ...] = ())
     for pattern, why in _PROHIBITED_TERMS.items():
         for m in re.finditer(rf"\b{pattern}\b", scrubbed, re.IGNORECASE):
             problems.append(f"'{m.group(0)}': {why}")
+
+    for m in _DOD.finditer(text):
+        problems.append(f"'{m.group(0)}': Brand Standard 3: write 'the Department' in display copy")
+    if "!" in text:
+        problems.append("'!': Brand Standard 3: no exclamation points")
 
     for pattern, why in _TRL_OVERCLAIMS.items():
         for m in re.finditer(pattern, text, re.IGNORECASE):

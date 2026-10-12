@@ -83,3 +83,19 @@ Drafts are blocked unless they pass checks drawn from the Master Operating Docum
 ```bash
 python -m unittest discover -s tests -t .
 ```
+
+## Live pipeline page
+
+`web/seed-pipeline.html` is published as a private claude.ai artifact:
+https://claude.ai/artifact/HLGYiC315MejcongoTCWJb
+
+It follows Brand Standard v1.0 (Family C-FEO). Stages use the maturity strokes: dotted for Target,
+dashed for in motion, solid signal blue for diligence and term sheet. Records live in the artifact's
+database. From the page you can:
+- **Scan Gmail** through the claude.ai Gmail connector. It updates last touch, flags replies waiting
+  on you, and moves first-touched targets forward.
+- **Write email** from a stage template, or have Claude write three subject and body versions against
+  the brand rules. Every draft goes through the lexicon, TRL-lock and clean-room checks.
+- **Create Gmail draft** to land the email in Gmail unsent. Nudges thread into the existing conversation.
+
+The page and the CSV are separate records. After the page goes live, treat it as the source of truth.

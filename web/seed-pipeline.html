@@ -1,0 +1,1016 @@
+<title>Vaeros Seed Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* Layout: Family C-FEO command-tier sheet. Lockup + distribution band, H1 on a signal rule,
+   BLUF box, bar-black header strips, then the working surface (board / register / queue)
+   with a right-hand dossier. Square geometry throughout; stage = maturity stroke. */
+:root {
+  --paper: #FFFFFF;
+  --ink: #0E1116;
+  --ink-2: #3D434D;
+  --muted: #6B7280;          /* in-design */
+  --rule: #D9DCE1;
+  --raised: #F3F4F6;         /* ground-raised */
+  --bar: #1A1A1A;            /* table header bars */
+  --bar-ink: #FFFFFF;
+  --signal: #2E75B6;         /* the single accent */
+  --signal-ink: #FFFFFF;
+  --signal-wash: #E8F0F8;
+  --classification: #B91C1C; /* distribution band only */
+  --watermark: rgba(14,17,22,0.035);
+  --shadow: 0 12px 40px rgba(14,17,22,0.18);
+
+  --sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  --step--1: 0.75rem; --step-0: 0.875rem; --step-1: 1rem; --step-2: 1.25rem; --step-3: 1.75rem; --step-4: 2.25rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0E1116; --ink: #E7E9EC; --ink-2: #B4BAC3; --muted: #8B93A0; --rule: #262B33;
+    --raised: #161A21; --bar: #000000; --bar-ink: #E7E9EC; --signal: #4A8FD0; --signal-ink: #0E1116;
+    --signal-wash: #13263A; --classification: #C62828; --watermark: rgba(231,233,236,0.03);
+    --shadow: 0 12px 40px rgba(0,0,0,0.6); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0E1116; --ink: #E7E9EC; --ink-2: #B4BAC3; --muted: #8B93A0; --rule: #262B33;
+  --raised: #161A21; --bar: #000000; --bar-ink: #E7E9EC; --signal: #4A8FD0; --signal-ink: #0E1116;
+  --signal-wash: #13263A; --classification: #C62828; --watermark: rgba(231,233,236,0.03);
+  --shadow: 0 12px 40px rgba(0,0,0,0.6); color-scheme: dark;
+}
+
+* { box-sizing: border-box; border-radius: 0; }
+body { background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: var(--step-0); line-height: 1.45; }
+.sheet { max-width: 1440px; margin: 0 auto; padding-inline: clamp(16px, 3vw, 40px); padding-block: 0 40px; position: relative; }
+.watermark { position: fixed; inset: 0; pointer-events: none; display: grid; place-items: center; overflow: hidden; z-index: 0; }
+.watermark span { font: 700 clamp(48px, 9vw, 140px)/1 var(--sans); letter-spacing: 0.2em; color: var(--watermark); transform: rotate(-32deg); white-space: nowrap; }
+.sheet > * { position: relative; z-index: 1; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.mono { font-family: var(--mono); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* Header */
+.masthead { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding-block: 20px 0; flex-wrap: wrap; }
+.lockup { display: flex; align-items: center; gap: 12px; color: var(--ink); text-decoration: none; }
+.lockup svg { width: 30px; height: 30px; flex: none; }
+.wordmark { display: grid; gap: 2px; }
+.wordmark b { font: 600 22px/1 var(--sans); letter-spacing: 0.42em; margin-right: -0.42em; }
+.wordmark small { font: 500 8.5px/1 var(--sans); letter-spacing: 0.22em; color: var(--ink-2); text-transform: uppercase; }
+.band { background: var(--classification); color: #FFFFFF; font: 700 11px/1 var(--sans); letter-spacing: 0.08em; padding: 6px 10px; text-transform: uppercase; }
+
+.title { padding-block: 28px 0; display: grid; gap: 6px; }
+.title h1 { margin: 0; font: 700 var(--step-4)/1.1 var(--sans); letter-spacing: -0.01em; text-wrap: balance; }
+.title p { margin: 0; font: 400 var(--step-1)/1.5 var(--serif); color: var(--ink-2); max-width: 70ch; }
+.h1rule { height: 3px; background: var(--signal); margin-top: 14px; }
+
+.meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); border-bottom: 1px solid var(--rule); }
+.meta div { display: grid; gap: 2px; padding: 9px 12px 9px 0; border-bottom: 1px solid var(--rule); min-width: 0; }
+.meta dt { font: 600 10px/1.2 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+.meta dd { margin: 0; font: 400 12px/1.4 var(--mono); overflow-wrap: anywhere; }
+.live-dot { display: inline-block; width: 7px; height: 7px; background: var(--muted); margin-right: 6px; vertical-align: 1px; }
+.live-dot.on { background: var(--signal); }
+
+.bluf { margin-top: 20px; background: var(--raised); border: 1px solid var(--rule); border-left: 3px solid var(--signal); padding: 14px 18px; font: 400 var(--step-1)/1.6 var(--serif); }
+.bluf b { font-family: var(--sans); font-weight: 700; }
+
+/* KPI strip */
+.kpis { margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); border: 1px solid var(--ink); }
+.kpi { padding: 12px 14px 14px; border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); display: grid; gap: 4px; align-content: start; min-width: 0; }
+.kpi .k { font: 600 10px/1.2 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+.kpi .v { font: 600 var(--step-3)/1 var(--sans); font-variant-numeric: tabular-nums; }
+.kpi .s { font: 400 11.5px/1.35 var(--mono); color: var(--muted); }
+.kpi.raise { grid-column: span 2; }
+.meter { display: flex; height: 12px; margin-top: 6px; border: 1px solid var(--rule); }
+.meter i { display: block; height: 100%; }
+.meter .ts { background: var(--signal); }
+.meter .sc { background: repeating-linear-gradient(90deg, var(--signal) 0 6px, transparent 6px 9px); opacity: 0.6; }
+.meter .rest { flex: 1; background: repeating-linear-gradient(90deg, var(--muted) 0 1px, transparent 1px 4px); opacity: 0.35; }
+@media (max-width: 520px) { .kpi.raise { grid-column: auto; } }
+
+/* Toolbar */
+.toolbar { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--ink); padding-bottom: 10px; }
+.tabs { display: flex; gap: 0; border: 1px solid var(--ink); }
+.tabs button { background: transparent; border: 0; padding: 7px 14px; cursor: pointer; font-weight: 600; font-size: 12.5px; letter-spacing: 0.02em; }
+.tabs button + button { border-left: 1px solid var(--ink); }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--paper); }
+.tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.field { border: 1px solid var(--rule); background: var(--paper); padding: 7px 10px; min-width: 0; }
+.field:focus { border-color: var(--signal); outline: none; }
+#q { width: 220px; max-width: 100%; }
+.btn { border: 1px solid var(--ink); background: var(--paper); padding: 7px 12px; cursor: pointer; font-weight: 600; font-size: 12.5px; white-space: nowrap; }
+.btn:hover { background: var(--raised); }
+.btn.primary { background: var(--signal); color: var(--signal-ink); border-color: var(--signal); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.dark { background: var(--ink); color: var(--paper); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn.small { padding: 4px 8px; font-size: 11.5px; }
+.status-line { font: 400 11.5px/1.4 var(--mono); color: var(--ink-2); min-height: 1.4em; margin-top: 8px; }
+.status-line.err { color: var(--ink); background: var(--raised); border-left: 3px solid var(--ink); padding: 6px 10px; }
+
+/* Board */
+.board-wrap { overflow-x: auto; margin-top: 16px; padding-bottom: 8px; }
+.board { display: grid; grid-template-columns: repeat(6, minmax(220px, 1fr)); gap: 0; min-width: 1320px; border: 1px solid var(--rule); }
+.col { border-right: 1px solid var(--rule); display: flex; flex-direction: column; min-width: 0; }
+.col:last-child { border-right: 0; }
+.col-h { background: var(--bar); color: var(--bar-ink); padding: 8px 10px; display: flex; justify-content: space-between; align-items: baseline; font: 600 11.5px/1.2 var(--sans); letter-spacing: 0.06em; text-transform: uppercase; }
+.col-h .n { font-family: var(--mono); font-weight: 400; opacity: 0.8; }
+.col-sub { font: 400 10.5px/1.3 var(--mono); color: var(--muted); padding: 6px 10px; border-bottom: 1px solid var(--rule); }
+.col-body { padding: 10px; display: grid; gap: 10px; align-content: start; flex: 1; min-height: 160px; }
+.col.drop { background: var(--signal-wash); }
+.card { background: var(--paper); border: 1.5px solid var(--muted); padding: 10px 11px; display: grid; gap: 6px; cursor: pointer; text-align: left; width: 100%; }
+.card:hover { box-shadow: 0 2px 0 var(--ink); }
+.card.dotted { border-style: dotted; }
+.card.dashed { border-style: dashed; }
+.card.solid { border-style: solid; border-color: var(--signal); }
+.card.passed { opacity: 0.55; border-style: solid; border-color: var(--rule); }
+.card .f { font: 600 13.5px/1.25 var(--sans); }
+.card .p { font: 400 12.5px/1.35 var(--serif); color: var(--ink-2); }
+.card .row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.tag { font: 500 10px/1 var(--mono); padding: 3px 5px; border: 1px solid var(--rule); color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+.tag.t1 { border-color: var(--ink); color: var(--ink); }
+.tag.today { background: var(--signal); color: var(--signal-ink); border-color: var(--signal); }
+.tag.overdue { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.tag.reply { border-color: var(--signal); color: var(--signal); }
+.tag.warm { border-style: dashed; }
+.card .nx { font: 400 11.5px/1.3 var(--mono); color: var(--ink-2); }
+
+.empty { padding: 28px; border: 1px dashed var(--muted); color: var(--ink-2); font-family: var(--serif); display: grid; gap: 8px; margin-top: 16px; }
+.empty b { font-family: var(--sans); color: var(--ink); }
+
+/* Register (table) */
+.table-wrap { overflow-x: auto; margin-top: 16px; border: 1px solid var(--rule); }
+table { border-collapse: collapse; width: 100%; min-width: 1060px; }
+th { background: var(--bar); color: var(--bar-ink); text-align: left; font: 600 10.5px/1.2 var(--sans); letter-spacing: 0.07em; text-transform: uppercase; padding: 9px 10px; white-space: nowrap; cursor: pointer; user-select: none; }
+th[aria-sort="ascending"]::after { content: " ▲"; font-size: 8px; }
+th[aria-sort="descending"]::after { content: " ▼"; font-size: 8px; }
+td { padding: 9px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+tbody tr { cursor: pointer; }
+tbody tr:hover td { background: var(--raised); }
+td .f { font-weight: 600; }
+td.notes { font-family: var(--serif); color: var(--ink-2); max-width: 360px; }
+td.notes span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.stage { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-weight: 500; }
+.stage i { width: 22px; height: 0; border-top: 2px solid var(--muted); display: inline-block; }
+.stage i.dotted { border-top-style: dotted; }
+.stage i.dashed { border-top-style: dashed; }
+.stage i.solid { border-top-color: var(--signal); }
+.stage i.passed { border-top-color: var(--rule); }
+
+/* Today queue */
+.queue { margin-top: 16px; display: grid; gap: 22px; }
+.qgroup h3 { margin: 0 0 8px; font: 700 12px/1.2 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; display: flex; gap: 8px; align-items: baseline; }
+.qgroup h3 span { font: 400 11px var(--mono); color: var(--muted); letter-spacing: 0; text-transform: none; }
+.qitem { display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; gap: 14px; align-items: start; padding: 12px 0; border-top: 1px solid var(--rule); }
+.qitem .d { font: 500 12px/1.3 var(--mono); }
+.qitem .what { display: grid; gap: 3px; min-width: 0; }
+.qitem .what b { font-weight: 600; }
+.qitem .what p { margin: 0; font: 400 13px/1.45 var(--serif); color: var(--ink-2); }
+.qitem .acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 640px) { .qitem { grid-template-columns: 1fr; } .qitem .acts { justify-content: flex-start; } }
+
+/* Dossier drawer */
+.scrim { position: fixed; inset: 0; background: rgba(14,17,22,0.35); z-index: 20; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(760px, 100%); background: var(--paper); z-index: 21; box-shadow: var(--shadow); display: flex; flex-direction: column; border-left: 1px solid var(--ink); padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.dh { padding: 16px 20px 0; display: grid; gap: 10px; }
+.dh-top { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+.dh h2 { margin: 0; font: 700 var(--step-2)/1.2 var(--sans); }
+.dh .sub { font: 400 13px/1.4 var(--serif); color: var(--ink-2); }
+.stagebar { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border: 1px solid var(--ink); }
+.stagebar button { border: 0; background: transparent; padding: 7px 4px; font: 600 10.5px/1.15 var(--sans); cursor: pointer; letter-spacing: 0.02em; }
+.stagebar button + button { border-left: 1px solid var(--rule); }
+.stagebar button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.dtabs { display: flex; border-bottom: 2px solid var(--ink); margin-top: 6px; overflow-x: auto; }
+.dtabs button { background: transparent; border: 0; padding: 9px 14px; font: 600 12.5px var(--sans); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
+.dtabs button[aria-selected="true"] { border-bottom-color: var(--signal); color: var(--signal); }
+.db { flex: 1; overflow-y: auto; padding: 18px 20px 28px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px 16px; }
+.lbl { display: grid; gap: 4px; font: 600 10px/1.2 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); min-width: 0; }
+.lbl .field { font: 400 13px/1.4 var(--sans); letter-spacing: 0; text-transform: none; color: var(--ink); width: 100%; }
+.lbl textarea.field { font-family: var(--serif); resize: vertical; min-height: 84px; }
+.full { grid-column: 1 / -1; }
+.section-h { font: 700 11px/1.2 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; margin: 22px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--ink); display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.section-h:first-child { margin-top: 0; }
+.log { display: grid; gap: 0; }
+.log div { display: grid; grid-template-columns: 86px minmax(0, 1fr); gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--rule); }
+.log time { font: 400 11.5px/1.45 var(--mono); color: var(--muted); }
+.log p { margin: 0; font: 400 13.5px/1.5 var(--serif); }
+.thread { display: grid; gap: 3px; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+.thread a { color: var(--signal); font-weight: 600; text-decoration: none; }
+.thread a:hover { text-decoration: underline; }
+.thread .m { font: 400 11.5px/1.4 var(--mono); color: var(--muted); }
+.thread p { margin: 0; font: 400 13px/1.45 var(--serif); color: var(--ink-2); }
+
+/* Composer */
+.variants { display: grid; gap: 10px; }
+.variant { border: 1.5px dashed var(--muted); padding: 12px; display: grid; gap: 6px; cursor: pointer; background: var(--paper); text-align: left; width: 100%; }
+.variant[aria-pressed="true"] { border-style: solid; border-color: var(--signal); background: var(--signal-wash); }
+.variant .vs { font: 600 14px/1.3 var(--sans); }
+.variant .vw { font: 400 12.5px/1.45 var(--serif); color: var(--ink-2); }
+.score { display: flex; align-items: center; gap: 8px; font: 500 11px var(--mono); color: var(--ink-2); }
+.score .bar { width: 120px; height: 6px; border: 1px solid var(--rule); position: relative; }
+.score .bar i { position: absolute; inset: 0 auto 0 0; background: var(--signal); }
+.lint { display: grid; gap: 4px; margin-top: 10px; }
+.lint div { font: 400 12px/1.45 var(--mono); padding: 6px 9px; border-left: 3px solid var(--ink); background: var(--raised); }
+.lint div.warn { border-left-color: var(--muted); }
+.lint div.ok { border-left-color: var(--signal); }
+.cmp-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; align-items: center; }
+.thinking { font: 400 12px var(--mono); color: var(--ink-2); }
+.subj-count { font: 400 11px var(--mono); color: var(--muted); }
+
+/* Modal */
+.modal { position: fixed; inset: 0; display: grid; place-items: center; z-index: 30; padding: 16px; }
+.modal-card { background: var(--paper); border: 1px solid var(--ink); box-shadow: var(--shadow); width: min(620px, 100%); max-height: 90vh; overflow-y: auto; }
+.modal-card header { background: var(--bar); color: var(--bar-ink); padding: 10px 16px; font: 600 12px var(--sans); letter-spacing: 0.08em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+.modal-card header button { background: transparent; border: 0; color: var(--bar-ink); cursor: pointer; font-size: 18px; line-height: 1; }
+.modal-card .mb { padding: 16px; display: grid; gap: 12px; }
+
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 10px 16px; font: 500 12.5px var(--sans); z-index: 40; max-width: calc(100% - 32px); }
+
+.foot { margin-top: 36px; padding-top: 10px; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font: 400 10.5px/1.4 var(--sans); color: var(--muted); }
+.foot .key { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+.foot .key span { display: inline-flex; gap: 6px; align-items: center; }
+.foot .key i { width: 22px; border-top: 2px solid var(--muted); display: inline-block; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .drawer { animation: slide 180ms ease-out; }
+  @keyframes slide { from { transform: translateX(24px); opacity: 0.6; } to { transform: none; opacity: 1; } }
+}
+</style>
+
+<div class="watermark" aria-hidden="true"><span>FOUNDER’S EYES ONLY</span></div>
+
+<div class="sheet">
+  <header class="masthead">
+    <a class="lockup" href="#board" aria-label="Vaeros">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <path d="M8 6 L26 6 L52 54 L43 66 Z" fill="currentColor"/>
+        <path d="M92 6 L74 6 L54 44 L63 56 Z" fill="currentColor"/>
+        <rect x="41" y="74" width="18" height="18" fill="var(--signal)"/>
+      </svg>
+      <span class="wordmark"><b>VAEROS</b><small>AI Software · Data Analytics</small></span>
+    </a>
+    <div class="band">Founder’s Eyes Only</div>
+  </header>
+
+  <section class="title">
+    <h1>Seed Round Pipeline</h1>
+    <p>$2M Seed, Q4 2026. Capital before notice: funds wire before the 31 December resignation notice is served.</p>
+    <div class="h1rule"></div>
+  </section>
+
+  <dl class="meta">
+    <div><dt>Document</dt><dd>Vaeros_Seed_Pipeline_v1_0_FEO</dd></div>
+    <div><dt>Distribution</dt><dd>Founder’s Eyes Only</dd></div>
+    <div><dt>Owner</dt><dd>Phillip Williams, MD</dd></div>
+    <div><dt>Ledger</dt><dd id="liveState"><span class="live-dot"></span>Connecting…</dd></div>
+    <div><dt>Gmail scan</dt><dd id="scanState">Not run this session</dd></div>
+  </dl>
+
+  <div class="bluf" id="bluf"><b>BLUF:</b> Loading the pipeline.</div>
+
+  <div class="kpis" id="kpis" aria-label="Round metrics"></div>
+
+  <div class="toolbar">
+    <div class="tabs" role="tablist" aria-label="Views">
+      <button role="tab" id="tab-board" aria-selected="true" data-view="board">Board</button>
+      <button role="tab" id="tab-table" aria-selected="false" data-view="table">Register</button>
+      <button role="tab" id="tab-today" aria-selected="false" data-view="today">Action queue</button>
+    </div>
+    <div class="tools">
+      <input class="field" id="q" type="search" placeholder="Search fund, partner, notes" aria-label="Search">
+      <select class="field" id="fTier" aria-label="Tier"><option value="">All tiers</option><option value="1">Tier 1</option><option value="2">Tier 2</option><option value="3">Tier 3</option></select>
+      <select class="field" id="fSource" aria-label="Lead source"><option value="">All sources</option></select>
+      <button class="btn" id="scanBtn" title="Read Gmail for every fund and update last touch, replies and status">Scan Gmail</button>
+      <button class="btn primary" id="addBtn">Add investor</button>
+    </div>
+  </div>
+  <div class="status-line" id="statusLine" role="status" aria-live="polite"></div>
+
+  <main id="view"></main>
+
+  <footer class="foot">
+    <div>Vaeros, Inc. · Delaware C-Corp · NAICS 541511 — AI Software &amp; Data Analytics</div>
+    <div class="key" aria-label="Stage key">
+      <span><i style="border-top-style:dotted"></i>Target</span>
+      <span><i style="border-top-style:dashed"></i>In motion</span>
+      <span><i style="border-top-color:var(--signal)"></i>Diligence / term sheet</span>
+    </div>
+    <div class="mono">Vaeros_Seed_Pipeline_v1_0_FEO · October 2026</div>
+  </footer>
+</div>
+
+<div id="layer"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---------- constants ----------
+  const ME = "pwilliams@vaeros.ai";
+  const BONNIE = "bduplessis@vaeros.ai";
+  const TARGET_RAISE = 2000000;
+  const NOTICE_DEADLINE = "2026-12-31";
+  const STAGES = ["Target", "Intro Requested", "Meeting Set", "Diligence", "Term Sheet", "Passed"];
+  const STAGE_SUB = {
+    "Target": "Not yet contacted",
+    "Intro Requested": "Outreach out, awaiting reply",
+    "Meeting Set": "Partner call on the calendar",
+    "Diligence": "Data room open",
+    "Term Sheet": "Terms in hand",
+    "Passed": "Closed out",
+  };
+  const stroke = s => s === "Target" ? "dotted" : (s === "Intro Requested" || s === "Meeting Set") ? "dashed" : s === "Passed" ? "passed" : "solid";
+  const GMAIL = "Gmail";
+  const SIGNATURE = "Phil\n\nPhillip Williams, MD\nFounder & CEO, Vaeros, Inc.\nm: 347.933.3454 | vaeros.ai";
+
+  // ---------- state ----------
+  const S = {
+    investors: [], loaded: false, view: "board", q: "", tier: "", source: "",
+    sort: { key: "next", dir: 1 }, openId: null, dtab: "overview",
+    db: null, mcp: null, sample: null, user: null, canWrite: true,
+    settings: { credentials: true },
+    threads: {}, compose: {}, scanning: false,
+  };
+  const $ = s => document.querySelector(s);
+  const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  // ---------- dates ----------
+  const todayISO = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+  const addDays = (iso, n) => { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  const daysBetween = (a, b) => Math.round((new Date(b + "T12:00:00") - new Date(a + "T12:00:00")) / 86400000);
+  const fmt = iso => { if (!iso) return "—"; const d = new Date(iso + "T12:00:00"); return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }); };
+  const money = n => n >= 1e6 ? "$" + (n / 1e6).toFixed(n % 1e6 ? 2 : 0) + "M" : n >= 1e3 ? "$" + Math.round(n / 1e3) + "K" : "$" + (n || 0);
+
+  // ---------- derived ----------
+  const active = i => i.status !== "Passed";
+  const isDue = (i, t = todayISO()) => active(i) && i.next && i.next <= t;
+  const isOverdue = (i, t = todayISO()) => active(i) && i.next && i.next < t;
+  function filtered() {
+    const q = S.q.trim().toLowerCase();
+    return S.investors.filter(i =>
+      (!S.tier || String(i.tier) === S.tier) &&
+      (!S.source || i.source === S.source) &&
+      (!q || [i.fund, i.partner, i.notes, i.source, i.location, i.hook].join(" ").toLowerCase().includes(q)));
+  }
+
+  // ---------- compliance (Brand Standard v1.0 §3 + MOD v4.0 §1.4/§1.5) ----------
+  const RULES = [
+    { re: /\bclinic(al|ally|ian|ians|s)?\b/gi, sev: "block", why: "Lexicon: use readiness data layer" },
+    { re: /\bhealth ?care\b|\bhealth services\b/gi, sev: "block", why: "Lexicon: use readiness / human performance data" },
+    { re: /\bmedical device\b/gi, sev: "block", why: "Lexicon: use AI software, data analytics" },
+    { re: /\bmedical(ly)?\b/gi, sev: "block", why: "Lexicon: use readiness / human performance data", skip: /Harvard Medical School/ },
+    { re: /\bpatients?\b/gi, sev: "block", why: "Lexicon: use operator" },
+    { re: /\bdiagnos(is|es|e|tic|tics)\b/gi, sev: "block", why: "Lexicon: use readiness score / kinematic finding" },
+    { re: /\bDoD\b/g, sev: "block", why: "Lexicon: write the Department or the Joint Force in display copy" },
+    { re: /\bbias mitigation\b|\bfairness\b|\bDEI\b|\bde-?bias(ed|ing)?\b|\badvanc\w* equity\b/gi, sev: "block", why: "Positioning: frame as cross-cohort kinematic validity / readiness accuracy" },
+    { re: /\bdashboards?\b|\bplatform UI\b|\bour app\b/gi, sev: "block", why: "Lexicon: Vaeros is a data layer, payload or feed" },
+    { re: /\barchitected\b/gi, sev: "block", why: "TRL lock: Layer 2 is underway, never architected" },
+    { re: /\b(IL[45](\/IL[45])?|Game Warden)\b[^.\n]{0,40}\b(authorized|accredited|certified|live)\b/gi, sev: "block", why: "TRL lock: Layer 2 is underway, not authorized" },
+    { re: /(?<!\bnot (yet )?)\bvalidated (on|in|with|across) (military|service members|warfighters|the force)/gi, sev: "block", why: "TRL lock: model not yet validated on military populations" },
+    { re: /\bintegrated (with|into) Maven\b|\bMaven integration (is )?(complete|live|done)\b/gi, sev: "block", why: "TRL lock: SDK and MNDA are access instruments, not integration" },
+    { re: /\bBaylor\b|\bBCM\b/g, sev: "block", why: "Clean-room rule: no academic-institution affiliation in Vaeros material" },
+    { re: /!/g, sev: "warn", why: "Voice: no exclamation points" },
+    { re: /\b(revolutionary|game[- ]chang\w+|unprecedented|world[- ]class|best[- ]in[- ]class|massive|cutting[- ]edge|disruptive)\b/gi, sev: "warn", why: "Voice: no superlatives" },
+    { re: /\bjust wanted to\b|\bI hope this (email )?finds you\b|\bquick question\b/gi, sev: "warn", why: "Voice: no hedging preambles" },
+    { re: /Harvard Medical School/g, sev: "warn", why: "Brand Standard §3 bars academic affiliations; MOD v4 credential rule allows Harvard · HSS · Kerlan-Jobe for investors. Your call." },
+  ];
+  function lint(subject, body, recipients = []) {
+    const out = [], text = subject + "\n" + body;
+    for (const r of RULES) {
+      const src = r.skip ? text.replace(r.skip, "") : text;
+      const hits = new Set((src.match(r.re) || []).map(s => s.trim()));
+      for (const h of hits) out.push({ sev: r.sev, msg: `“${h}”: ${r.why}` });
+    }
+    const trl = /\bTRL ?\d\b/gi; let m;
+    while ((m = trl.exec(text))) {
+      const win = text.slice(Math.max(0, m.index - 120), m.index + 40);
+      if (!/Layer 1|kinematic extraction/i.test(win)) out.push({ sev: "block", msg: `“${m[0]}”: TRL lock: tie TRL 6 to Layer 1 kinematic extraction only` });
+    }
+    for (const a of recipients) if (/@([\w.-]+\.)?(bcm\.edu|bcm\.tmc\.edu|baylor\.edu)\b/i.test(a)) out.push({ sev: "block", msg: `${a}: clean-room rule, never a Baylor address` });
+    if (subject.length > 60) out.push({ sev: "warn", msg: `Subject is ${subject.length} characters; keep it under 50–60 so it survives mobile` });
+    if (body.split(/\s+/).filter(Boolean).length > 190) out.push({ sev: "warn", msg: "Body runs long; first-touch email reads best under 150 words" });
+    if (/\[EDIT/.test(text)) out.push({ sev: "block", msg: "Fill the [EDIT] line before drafting" });
+    return out;
+  }
+
+  // ---------- templates (fallback when Claude is unavailable) ----------
+  const CRED = () => S.settings.credentials ? "\n\nBackground: orthopedic surgeon; trained at Harvard Medical School, HSS and Kerlan-Jobe." : "";
+  const PROOF = "- Tradewinds Awardable (September 2026)\n- Palantir Defense SDK acquired; Second Front MNDA executed for Game Warden deployment, underway\n- Layer 1 kinematic extraction demonstrated at TRL 6; patent pending\n- The predictive model is not yet validated on military populations; the Seed funds that work";
+  const first = i => (!i.partner || /^TBD/i.test(i.partner)) ? "" : i.partner.split(/\s+/)[0];
+  const shortFund = i => i.fund.split(" (")[0].split(" - ")[0];
+  const TEMPLATES = {
+    cold: i => {
+      const warm = i.source && i.source !== "Cold Outreach" && i.source !== "Alumni";
+      return {
+        to: i.email ? [i.email] : [], cc: [],
+        subject: warm ? `${i.source} suggested I reach out (Vaeros)` : "Every asset reports. The operator should too.",
+        body: `${first(i) ? "Hi " + first(i) + "," : "Hi,"}\n\n${warm ? i.source + " suggested we connect. " : ""}[EDIT one personal line. Angle: ${i.hook || "why this partner"}]\n\nMaven tracks where the Department's assets are. It does not track which operators are fit to run them. Vaeros is the human readiness data layer for CJADC2: video in, signed readiness data out, delivered as a FHIR R4 feed into Maven.\n\n${PROOF}\n\nI'm raising a $2M Seed to fund the live Maven integration build in Q1 2027.${CRED()}\n\nWorth 20 minutes next week? I can send the deck ahead.\n\n${SIGNATURE}`,
+      };
+    },
+    followup: i => ({
+      to: i.email ? [i.email] : [], cc: [], reply: true,
+      subject: "Re: Every asset reports. The operator should too.",
+      body: `${first(i) ? "Hi " + first(i) + "," : "Hi,"}\n\nBumping this once. Short version: Vaeros is the human readiness data feed for Maven, and the $2M Seed funds the live integration build.\n\nIs 20 minutes next week possible? If the timing is wrong, a quick no helps just as much.\n\n${SIGNATURE}`,
+    }),
+    referrer: i => ({
+      to: i.referrerEmail ? [i.referrerEmail] : [], cc: [BONNIE], reply: true,
+      subject: `Re: Vaeros Seed Round / ${shortFund(i)} Intro`,
+      body: `${(i.source || "").split(" ")[0]},\n\nCircling back on the ${shortFund(i)} intro. Two easy options: forward the blurb from my last note as is, or tell me who you have in mind and I'll write to them and mention you.\n\nIf the timing isn't right on your side, just say so.\n\n${SIGNATURE}`,
+    }),
+    postmeeting: i => ({
+      to: i.email ? [i.email] : [], cc: [],
+      subject: "Vaeros: deck, data room and next steps",
+      body: `${first(i) ? "Hi " + first(i) + "," : "Hi,"}\n\nThank you for the time today. Deck and data room access follow in a separate note.\n\nNext step on our side: [EDIT]. Next step on yours: [EDIT].\n\nThe round closes this quarter. I'll check back on [EDIT date] unless I hear from you first.\n\n${SIGNATURE}`,
+    }),
+  };
+  const defaultTemplate = i => i.status === "Target" ? "cold"
+    : i.status === "Intro Requested" ? (i.referrerEmail ? "referrer" : "followup")
+    : i.status === "Meeting Set" ? "postmeeting" : "followup";
+
+  // ---------- writes ----------
+  const queues = {};
+  function write(id, patch, logText) {
+    if (!S.db) { toast("The ledger is offline. Changes were not saved."); return Promise.resolve(); }
+    const inv = S.investors.find(x => x.id === id);
+    if (logText) patch.log = [...(inv?.log || []), { t: todayISO(), text: logText }].slice(-200);
+    patch.updatedAt = new Date().toISOString();
+    const ref = S.db.collection("investors").doc(id);
+    queues[id] = (queues[id] || Promise.resolve()).then(() => ref.update(patch)).catch(e => {
+      if (e && e.code === "invalid_argument") { S.canWrite = false; toast("You have read-only access to this pipeline."); }
+      else if (e && e.code === "quota_exceeded") toast("The ledger is full. Remove passed investors to make room.");
+      else toast("Save failed. Try again in a moment.");
+      render();
+    });
+    return queues[id];
+  }
+
+  // ---------- render: summary ----------
+  function renderSummary() {
+    const t = todayISO(), inv = S.investors;
+    const act = inv.filter(active);
+    const by = s => inv.filter(i => i.status === s).length;
+    const meetings = by("Meeting Set") + by("Diligence") + by("Term Sheet");
+    const replies = inv.filter(i => i.awaitingReply && active(i));
+    const due = inv.filter(i => isDue(i, t));
+    const overdue = inv.filter(i => isOverdue(i, t));
+    const ts = inv.filter(i => i.status === "Term Sheet").reduce((a, i) => a + (+i.softCircle || 0), 0);
+    const sc = inv.filter(i => active(i) && i.status !== "Term Sheet").reduce((a, i) => a + (+i.softCircle || 0), 0);
+    const daysLeft = daysBetween(t, NOTICE_DEADLINE);
+    const inMotion = act.filter(i => i.status !== "Target").length;
+
+    if (!S.loaded) return;
+    const nextUp = [...due].sort((a, b) => (a.next || "").localeCompare(b.next || "") || (a.tier - b.tier))[0];
+    $("#bluf").innerHTML = `<b>BLUF:</b> ${inv.length} investors tracked, ${inMotion} in motion, ${meetings} at meeting stage or later. ` +
+      `${money(ts)} under term sheet and ${money(sc)} soft-circled against the ${money(TARGET_RAISE)} target. ` +
+      `${daysLeft} days remain before the 31 December notice deadline, and funds must wire before it. ` +
+      (replies.length ? `<b>${replies.length} ${replies.length === 1 ? "reply is" : "replies are"} waiting on you.</b> ` : "") +
+      (nextUp ? `Next action: ${esc(nextUp.fund)}, ${esc(nextUp.nextAction || "follow up")}.` : "Nothing is due today.");
+
+    const pct = v => Math.min(100, (v / TARGET_RAISE) * 100).toFixed(1);
+    $("#kpis").innerHTML = `
+      <div class="kpi"><span class="k">Tracked</span><span class="v">${inv.length}</span><span class="s">${by("Target")} target · ${by("Passed")} passed</span></div>
+      <div class="kpi"><span class="k">In motion</span><span class="v">${inMotion}</span><span class="s">${by("Intro Requested")} awaiting intro or reply</span></div>
+      <div class="kpi"><span class="k">Meetings +</span><span class="v">${meetings}</span><span class="s">${by("Diligence")} diligence · ${by("Term Sheet")} term sheet</span></div>
+      <div class="kpi"><span class="k">Due today</span><span class="v">${due.length}</span><span class="s">${overdue.length} overdue · ${replies.length} replies waiting</span></div>
+      <div class="kpi raise"><span class="k">Raise · ${money(TARGET_RAISE)} Seed</span><span class="v">${money(ts + sc)}</span>
+        <div class="meter" role="img" aria-label="${money(ts)} under term sheet, ${money(sc)} soft-circled of ${money(TARGET_RAISE)}"><i class="ts" style="width:${pct(ts)}%"></i><i class="sc" style="width:${pct(sc)}%"></i><i class="rest"></i></div>
+        <span class="s">${money(ts)} term sheet · ${money(sc)} soft-circled · ${money(Math.max(0, TARGET_RAISE - ts - sc))} open</span></div>
+      <div class="kpi"><span class="k">Notice deadline</span><span class="v">${daysLeft}d</span><span class="s">31 Dec 2026 · wire first</span></div>`;
+
+    const sources = [...new Set(inv.map(i => i.source).filter(Boolean))].sort();
+    const sel = $("#fSource"), cur = S.source;
+    sel.innerHTML = `<option value="">All sources</option>` + sources.map(s => `<option ${s === cur ? "selected" : ""}>${esc(s)}</option>`).join("");
+  }
+
+  function tags(i) {
+    const t = todayISO(), out = [];
+    out.push(`<span class="tag ${i.tier == 1 ? "t1" : ""}">T${esc(i.tier || "–")}</span>`);
+    if (i.source && i.source !== "Cold Outreach") out.push(`<span class="tag warm">${esc(i.source)}</span>`);
+    if (i.awaitingReply && active(i)) out.push(`<span class="tag reply">Reply waiting</span>`);
+    if (isOverdue(i, t)) out.push(`<span class="tag overdue">Overdue</span>`);
+    else if (isDue(i, t)) out.push(`<span class="tag today">Today</span>`);
+    return out.join("");
+  }
+
+  // ---------- render: views ----------
+  function emptyState() {
+    return `<div class="empty"><b>No investors in the ledger yet.</b>
+      <span>Add the first fund with “Add investor”. Each fund carries partner, lead source, stage, next action date and notes, and the Gmail scan fills in last touch and replies.</span></div>`;
+  }
+  function renderBoard() {
+    const rows = filtered();
+    if (!rows.length && S.loaded && !S.investors.length) return emptyState();
+    return `<div class="board-wrap"><div class="board">${STAGES.map(st => {
+      const items = rows.filter(i => i.status === st).sort((a, b) => (a.next || "9").localeCompare(b.next || "9") || a.tier - b.tier);
+      return `<section class="col" data-stage="${esc(st)}" aria-label="${esc(st)}">
+        <div class="col-h"><span>${esc(st)}</span><span class="n">${items.length}</span></div>
+        <div class="col-sub">${esc(STAGE_SUB[st])}</div>
+        <div class="col-body">${items.map(i => `
+          <button class="card ${stroke(i.status)}" draggable="${S.canWrite}" data-id="${esc(i.id)}">
+            <span class="f">${esc(i.fund)}</span>
+            <span class="p">${esc(i.partner || "Partner TBD")}</span>
+            <span class="row">${tags(i)}</span>
+            <span class="nx">${i.next ? "Next " + fmt(i.next) + (i.nextAction ? " · " + esc(i.nextAction) : "") : "No next action"}</span>
+          </button>`).join("")}</div></section>`;
+    }).join("")}</div></div>`;
+  }
+  const COLS = [
+    ["fund", "Fund"], ["partner", "Partner"], ["source", "Lead source"], ["status", "Status"],
+    ["next", "Next action"], ["lastTouch", "Last touch"], ["tier", "Tier"], ["softCircle", "Soft circle"], ["notes", "Notes"],
+  ];
+  function renderTable() {
+    const rows = filtered();
+    if (!rows.length && S.loaded && !S.investors.length) return emptyState();
+    const { key, dir } = S.sort;
+    rows.sort((a, b) => {
+      let x = a[key] ?? "", y = b[key] ?? "";
+      if (key === "status") { x = STAGES.indexOf(a.status); y = STAGES.indexOf(b.status); }
+      if (key === "tier" || key === "softCircle") { x = +x || 0; y = +y || 0; }
+      if (key === "next" || key === "lastTouch") { x = x || "9999"; y = y || "9999"; }
+      return (x > y ? 1 : x < y ? -1 : 0) * dir;
+    });
+    return `<div class="table-wrap"><table><thead><tr>${COLS.map(([k, l]) =>
+      `<th data-sort="${k}" aria-sort="${key === k ? (dir > 0 ? "ascending" : "descending") : "none"}">${l}</th>`).join("")}</tr></thead>
+      <tbody>${rows.map(i => `<tr data-id="${esc(i.id)}">
+        <td><span class="f">${esc(i.fund)}</span></td>
+        <td>${esc(i.partner || "TBD")}</td>
+        <td>${esc(i.source)}</td>
+        <td><span class="stage"><i class="${stroke(i.status)}"></i>${esc(i.status)}</span></td>
+        <td class="mono num">${fmt(i.next)}${isOverdue(i) ? ' <span class="tag overdue">Overdue</span>' : isDue(i) ? ' <span class="tag today">Today</span>' : ""}</td>
+        <td class="mono num">${fmt(i.lastTouch)}${i.awaitingReply && active(i) ? ' <span class="tag reply">Reply</span>' : ""}</td>
+        <td class="mono">T${esc(i.tier)}</td>
+        <td class="mono num">${i.softCircle ? money(+i.softCircle) : "—"}</td>
+        <td class="notes"><span>${esc(i.notes)}</span></td></tr>`).join("")}</tbody></table></div>`;
+  }
+  function renderToday() {
+    const t = todayISO(), rows = filtered().filter(active);
+    const groups = [
+      ["Replies waiting on you", rows.filter(i => i.awaitingReply), "An investor or referrer wrote last"],
+      ["Overdue", rows.filter(i => isOverdue(i, t) && !i.awaitingReply), "Past the next action date"],
+      ["Today", rows.filter(i => i.next === t && !i.awaitingReply), fmt(t)],
+      ["Next 7 days", rows.filter(i => i.next > t && i.next <= addDays(t, 7)), `${fmt(addDays(t, 1))} to ${fmt(addDays(t, 7))}`],
+    ];
+    if (!S.investors.length && S.loaded) return emptyState();
+    return `<div class="queue">${groups.map(([h, items, sub]) => `
+      <section class="qgroup"><h3>${h} <span>${items.length} · ${esc(sub)}</span></h3>
+      ${items.length ? items.sort((a, b) => (a.next || "").localeCompare(b.next || "") || a.tier - b.tier).map(i => `
+        <div class="qitem">
+          <span class="d num">${fmt(i.next)}</span>
+          <div class="what"><b>${esc(i.fund)} · ${esc(i.partner || "Partner TBD")}</b>
+            <p>${esc(i.nextAction || (i.status === "Target" ? "Send first touch" : "Follow up"))}</p>
+            <span class="row" style="display:flex;gap:6px;flex-wrap:wrap">${tags(i)}<span class="stage" style="font-size:12px"><i class="${stroke(i.status)}"></i>${esc(i.status)}</span></span></div>
+          <div class="acts"><button class="btn small" data-open="${esc(i.id)}">Open</button><button class="btn small primary" data-compose="${esc(i.id)}">Write email</button></div>
+        </div>`).join("") : `<p style="margin:0;color:var(--muted);font-family:var(--serif)">Nothing here.</p>`}</section>`).join("")}</div>`;
+  }
+
+  // ---------- drawer ----------
+  function renderDrawer() {
+    const i = S.investors.find(x => x.id === S.openId);
+    if (!i) { $("#layer").innerHTML = ""; return; }
+    const ro = S.canWrite ? "" : "disabled";
+    const tab = S.dtab;
+    let body = "";
+    if (tab === "overview") {
+      body = `
+        <div class="section-h">Record</div>
+        <div class="grid2">
+          ${fieldInput("fund", "Fund name", i.fund)}
+          ${fieldInput("partner", "Partner name", i.partner)}
+          ${fieldInput("email", "Partner email", i.email, "email")}
+          ${fieldInput("domain", "Fund domain (Gmail match)", i.domain)}
+          ${fieldInput("source", "Lead source", i.source, "text", "sources")}
+          ${fieldInput("referrerEmail", "Referrer email", i.referrerEmail, "email")}
+          ${fieldInput("next", "Next action date", i.next, "date")}
+          ${fieldInput("nextAction", "Next action", i.nextAction)}
+          <label class="lbl">Tier<select class="field" data-f="tier" ${ro}>${[1, 2, 3].map(n => `<option ${+i.tier === n ? "selected" : ""}>${n}</option>`).join("")}</select></label>
+          ${fieldInput("softCircle", "Soft circle (USD)", i.softCircle || "", "number")}
+          ${fieldInput("location", "Location", i.location)}
+          ${fieldInput("hook", "Personalization angle", i.hook)}
+          <label class="lbl full">Notes<textarea class="field" data-f="notes" ${ro}>${esc(i.notes)}</textarea></label>
+        </div>
+        <datalist id="sources">${[...new Set(["Cold Outreach", "Alumni", "Lane Dilg", ...S.investors.map(x => x.source)])].map(s => `<option value="${esc(s)}">`).join("")}</datalist>
+        <div class="section-h">Signals <span class="mono" style="font-weight:400;text-transform:none;letter-spacing:0">from Gmail scan</span></div>
+        <div class="grid2">
+          <div class="lbl">Last touch<span class="mono" style="font-size:13px;color:var(--ink);text-transform:none;letter-spacing:0">${fmt(i.lastTouch)}</span></div>
+          <div class="lbl">Last inbound<span class="mono" style="font-size:13px;color:var(--ink);text-transform:none;letter-spacing:0">${fmt(i.lastIn)}</span></div>
+          <div class="lbl">Last outbound<span class="mono" style="font-size:13px;color:var(--ink);text-transform:none;letter-spacing:0">${fmt(i.lastOut)}</span></div>
+          <div class="lbl">Reply waiting<span class="mono" style="font-size:13px;color:var(--ink);text-transform:none;letter-spacing:0">${i.awaitingReply ? "Yes" : "No"}</span></div>
+        </div>
+        ${S.canWrite ? `<div class="cmp-actions"><button class="btn" data-del="1">Remove from ledger</button></div>` : ""}`;
+    } else if (tab === "activity") {
+      const log = [...(i.log || [])].reverse();
+      body = `
+        ${S.canWrite ? `<div class="section-h">Log an update</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><input class="field" id="logText" style="flex:1;min-width:200px" placeholder="Call with partner; asked for the data room"><button class="btn dark" id="logBtn">Log</button></div>` : ""}
+        <div class="section-h">Timeline <span class="mono" style="font-weight:400;text-transform:none;letter-spacing:0">${log.length} entries</span></div>
+        <div class="log">${log.length ? log.map(e => `<div><time>${fmt(e.t)}</time><p>${esc(e.text)}</p></div>`).join("") : `<p style="color:var(--muted);font-family:var(--serif)">No activity logged yet.</p>`}</div>`;
+    } else if (tab === "gmail") {
+      const th = S.threads[i.id];
+      body = `<div class="section-h">Threads <button class="btn small" id="loadThreads">${th ? "Refresh" : "Load threads"}</button></div>
+        ${!S.mcp ? `<p class="thinking">Gmail is not available in this view. Open the page in claude.ai with the Gmail connector added.</p>` :
+          !th ? `<p class="thinking">Reads up to 10 threads matching ${esc(queryFor(i) || "this fund")}.</p>` :
+          th.loading ? `<p class="thinking">Reading Gmail…</p>` :
+          th.error ? `<div class="status-line err">${esc(th.error)}</div>` :
+          !th.items.length ? `<p class="thinking">No threads found. Add a partner email or fund domain on the Record tab.</p>` :
+          th.items.map(t => `<div class="thread">
+            <a href="${esc(t.viewUrl)}" target="_blank" rel="noopener">${esc(t.subject || "(no subject)")}</a>
+            <span class="m">${esc(t.who)} · ${fmt(t.date)} · ${t.count} message${t.count === 1 ? "" : "s"}${t.lastMine ? " · you wrote last" : " · they wrote last"}</span>
+            <p>${t.snippet}</p></div>`).join("")}`;
+    } else if (tab === "compose") {
+      body = renderComposer(i);
+    }
+    $("#layer").innerHTML = `
+      <div class="scrim" data-close="1"></div>
+      <aside class="drawer" role="dialog" aria-modal="true" aria-label="${esc(i.fund)}">
+        <div class="dh">
+          <div class="dh-top"><div><h2>${esc(i.fund)}</h2><div class="sub">${esc(i.partner || "Partner TBD")} · ${esc(i.source)} · Tier ${esc(i.tier)}</div></div>
+            <button class="btn small" data-close="1" aria-label="Close">Close ✕</button></div>
+          <div class="stagebar" role="group" aria-label="Stage">${STAGES.map(s => `<button data-stage-set="${esc(s)}" aria-pressed="${i.status === s}" ${ro}>${esc(s)}</button>`).join("")}</div>
+          <div class="dtabs" role="tablist">${[["overview", "Record"], ["activity", "Activity"], ["gmail", "Gmail"], ["compose", "Write email"]].map(([k, l]) =>
+            `<button role="tab" data-dtab="${k}" aria-selected="${tab === k}">${l}</button>`).join("")}</div>
+        </div>
+        <div class="db">${body}</div>
+      </aside>`;
+  }
+  function fieldInput(f, label, val, type = "text", list) {
+    return `<label class="lbl">${label}<input class="field" data-f="${f}" type="${type}" value="${esc(val)}" ${list ? `list="${list}"` : ""} ${S.canWrite ? "" : "disabled"}></label>`;
+  }
+
+  // ---------- composer ----------
+  function composeState(i) {
+    if (!S.compose[i.id]) {
+      const tpl = defaultTemplate(i), d = TEMPLATES[tpl](i);
+      S.compose[i.id] = { tpl, to: d.to.join(", "), cc: d.cc.join(", "), subject: d.subject, body: d.body, reply: !!d.reply, variants: null, pick: -1, busy: false, err: "", created: null };
+    }
+    return S.compose[i.id];
+  }
+  function renderComposer(i) {
+    const c = composeState(i);
+    const recips = c.to.split(",").concat(c.cc.split(",")).map(s => s.trim()).filter(Boolean);
+    const issues = lint(c.subject, c.body, recips);
+    const blocks = issues.filter(x => x.sev === "block");
+    return `
+      <div class="section-h">Start from <span class="mono" style="font-weight:400;text-transform:none;letter-spacing:0">stage: ${esc(i.status)}</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <select class="field" id="tplSel">${[["cold", "First touch"], ["followup", "Follow-up bump"], ["referrer", "Nudge the referrer"], ["postmeeting", "After the meeting"]].map(([k, l]) => `<option value="${k}" ${c.tpl === k ? "selected" : ""}>${l}</option>`).join("")}</select>
+        <button class="btn" id="useTpl">Load template</button>
+        ${S.sample ? `<button class="btn primary" id="aiBtn" ${c.busy ? "disabled" : ""}>Write 3 versions with Claude</button>` : ""}
+        <label style="display:flex;gap:6px;align-items:center;font-size:12px"><input type="checkbox" id="credTog" ${S.settings.credentials ? "checked" : ""}> Include credentials line</label>
+      </div>
+      ${c.busy ? `<p class="thinking">Claude is writing three versions against the brand rules…</p>` : ""}
+      ${c.err ? `<div class="status-line err">${esc(c.err)}</div>` : ""}
+      ${c.variants ? `<div class="section-h">Versions <span class="mono" style="font-weight:400;text-transform:none;letter-spacing:0">open likelihood is Claude’s estimate</span></div>
+        <div class="variants">${c.variants.map((v, k) => `<button class="variant" data-pick="${k}" aria-pressed="${c.pick === k}">
+          <span class="vs">${esc(v.subject)}</span>
+          <span class="score"><span class="bar"><i style="width:${Math.max(0, Math.min(100, +v.openScore || 0))}%"></i></span>${esc(v.openScore)} / 100 · ${esc(v.angle || "")}</span>
+          <span class="vw">${esc(v.why || "")}</span></button>`).join("")}</div>` : ""}
+      <div class="section-h">Draft</div>
+      <div class="grid2">
+        <label class="lbl">To<input class="field" id="cTo" value="${esc(c.to)}" placeholder="partner@fund.com"></label>
+        <label class="lbl">Cc<input class="field" id="cCc" value="${esc(c.cc)}"></label>
+        <label class="lbl full">Subject <span class="subj-count">${c.subject.length} chars</span><input class="field" id="cSubj" value="${esc(c.subject)}"></label>
+        <label class="lbl full">Body<textarea class="field" id="cBody" style="min-height:300px;font-family:var(--serif);font-size:14px">${esc(c.body)}</textarea></label>
+      </div>
+      <div class="lint" id="lintBox">${issues.length ? issues.map(x => `<div class="${x.sev}">${x.sev === "block" ? "BLOCK" : "CHECK"} · ${esc(x.msg)}</div>`).join("") : `<div class="ok">CLEAR · Lexicon, TRL lock and clean-room checks pass</div>`}</div>
+      <div class="cmp-actions">
+        <button class="btn primary" id="mkDraft" ${blocks.length || !c.to.trim() || !S.mcp ? "disabled" : ""}>Create Gmail draft</button>
+        <button class="btn" id="copyBtn">Copy text</button>
+        ${c.reply && i.lastMsgId ? `<span class="thinking">Threads into the existing conversation</span>` : ""}
+        ${!c.to.trim() ? `<span class="thinking">Add a recipient to create the draft</span>` : ""}
+        ${c.created ? `<a class="btn" href="${esc(c.created)}" target="_blank" rel="noopener">Open draft in Gmail</a>` : ""}
+      </div>
+      <p class="thinking" style="margin-top:10px">Drafts land in Gmail unsent. You review and send.</p>`;
+  }
+  function relint() {
+    const i = S.investors.find(x => x.id === S.openId); if (!i) return;
+    const c = composeState(i);
+    const recips = c.to.split(",").concat(c.cc.split(",")).map(s => s.trim()).filter(Boolean);
+    const issues = lint(c.subject, c.body, recips);
+    $("#lintBox").innerHTML = issues.length ? issues.map(x => `<div class="${x.sev}">${x.sev === "block" ? "BLOCK" : "CHECK"} · ${esc(x.msg)}</div>`).join("") : `<div class="ok">CLEAR · Lexicon, TRL lock and clean-room checks pass</div>`;
+    const b = $("#mkDraft"); if (b) b.disabled = issues.some(x => x.sev === "block") || !c.to.trim() || !S.mcp;
+    const sc = document.querySelector(".subj-count"); if (sc) sc.textContent = c.subject.length + " chars";
+  }
+
+  async function writeWithClaude(i) {
+    const c = composeState(i);
+    c.busy = true; c.err = ""; renderDrawer();
+    const kind = { cold: "a first-touch email to the partner", followup: "a short follow-up bump on an unanswered first touch", referrer: `a nudge to ${i.source}, who agreed to make a warm intro to ${shortFund(i)}`, postmeeting: "a post-meeting follow-up" }[c.tpl];
+    const prompt = `You write fundraising emails for Phillip Williams, MD, founder and CEO of Vaeros, Inc. Write ${kind}. Return three distinct versions that maximize open and reply rates.
+
+RECIPIENT
+Fund: ${i.fund}
+Partner: ${i.partner || "unknown"}
+Lead source: ${i.source}
+Stage: ${i.status}
+Why this partner (angle): ${i.hook || "n/a"}
+Notes: ${(i.notes || "").slice(0, 1200)}
+Last touch: ${i.lastTouch || "none"}
+
+FACTS YOU MAY USE (use nothing else; never upgrade a claim)
+- Category: AI software and data analytics. Descriptor: human readiness data layer for CJADC2.
+- Brand lines: "Readiness is a data problem." "Every asset reports. The operator should too." "Video in. Signed readiness data out."
+- Maven tracks where the Department's assets are; it does not track which operators are fit to run them. Vaeros delivers a Tactical Readiness Score (TRS) as a headless FHIR R4 feed into Maven.
+- Tradewinds Awardable (22 September 2026).
+- Palantir Defense SDK acquired (access instrument; ontology mapping is in design). Second Front MNDA executed for Game Warden deployment (underway, not authorized).
+- Layer 1 (markerless kinematic extraction and FHIR R4 payload generation) demonstrated at TRL 6. The predictive model is not yet validated on military populations.
+- Provisional patent filed October 2026 (patent pending).
+- Raising a $2M Seed to fund the live Maven integration build (Game Warden deployment and Palantir Defense SDK ontology mapping), Q1 2027.
+${S.settings.credentials ? "- Founder: orthopedic surgeon trained at Harvard Medical School, HSS and Kerlan-Jobe (use at most once, briefly)." : "- Founder: Phillip Williams, MD, orthopedic surgeon. Do not name any academic institution."}
+
+BRAND VOICE (hard rules)
+- Open with a BLUF in 2-4 short sentences: the gap, the capability, the maturity, the ask. Short declaratives, numerals.
+- No exclamation points, emoji, superlatives, hype or hedging preambles ("I hope this finds you", "just wanted to", "quick question"). State limits in the same breath as capability.
+- Never use: medical, healthcare, health services, patient, clinic, clinical, diagnosis, medical device, DoD (say "the Department"), bias mitigation, fairness, DEI, de-bias, dashboard, app, platform UI, architected, authorized (for Layer 2), "validated on military", "integrated with Maven". Never mention Baylor or BCM.
+- Say TRL 6 only next to "Layer 1 kinematic extraction".
+
+EMAIL CRAFT
+- Subject: at most 50 characters, specific, no clickbait. If the lead source is a person, name them in the subject. Otherwise lead with the gap or a brand line.
+- First sentence is about the recipient, using the angle. Body under 130 words. One ask with a time box. Plain text. No links or attachments on first touch.
+- For a referrer nudge: two easy options (forward the blurb, or name the contact so Phil writes directly), a graceful out, under 90 words.
+- Sign off exactly with:
+${SIGNATURE}
+
+Reply with only JSON: {"variants":[{"angle":"3-5 word label","subject":"...","body":"full plain-text body including greeting and signature","openScore":0-100,"why":"one sentence on why this subject earns the open"}]}`;
+    try {
+      const out = await S.sample.json(prompt, { cache: false });
+      const v = (out && Array.isArray(out.variants) ? out.variants : []).filter(x => x && x.subject && x.body).slice(0, 3);
+      if (!v.length) throw { code: "invalid_json" };
+      c.variants = v.map(x => ({ ...x, subject: String(x.subject), body: String(x.body) }));
+      c.pick = 0; c.subject = c.variants[0].subject; c.body = c.variants[0].body;
+    } catch (e) {
+      c.err = ({
+        not_granted: "Claude is not allowed for this page. Templates still work.",
+        sampling_disabled: "Claude is not available on this account. Templates still work.",
+        rate_limited: "Too many requests right now. Try again in a minute.",
+        invalid_json: "Claude's answer could not be read. Try again.",
+        refused: "Claude declined this request. Edit the notes or angle and try again.",
+        cancelled: "",
+      })[e && e.code] ?? "Claude could not finish. Try again.";
+      if (e && (e.code === "not_granted" || e.code === "sampling_disabled")) S.sample = null;
+    }
+    c.busy = false; renderDrawer();
+  }
+
+  async function createDraft(i) {
+    const c = composeState(i);
+    const to = c.to.split(",").map(s => s.trim()).filter(Boolean);
+    const cc = c.cc.split(",").map(s => s.trim()).filter(Boolean);
+    if (lint(c.subject, c.body, to.concat(cc)).some(x => x.sev === "block")) return;
+    const btn = $("#mkDraft"); btn.disabled = true; btn.textContent = "Creating…";
+    const input = { to, subject: c.subject, body: c.body };
+    if (cc.length) input.cc = cc;
+    if (c.reply && i.lastMsgId) input.replyToMessageId = i.lastMsgId;
+    try {
+      const res = await S.mcp.callTool(GMAIL, "create_draft", input, { cache: false });
+      const p = res.payload || {};
+      c.created = p.viewUrl || "https://mail.google.com/mail/#drafts";
+      await write(i.id, {}, `Gmail draft created: “${c.subject}” to ${to.join(", ")}.`);
+      toast("Draft created in Gmail. Review and send it there.");
+    } catch (e) {
+      toast(mcpMessage(e, "create the draft") + " Check Gmail drafts before trying again.");
+    }
+    renderDrawer();
+  }
+
+  // ---------- Gmail ----------
+  function mcpMessage(e, what) {
+    const code = e && e.code;
+    if (code === "server_not_connected" || code === "selection_required") return `Add Gmail in claude.ai Settings → Connectors to ${what}.`;
+    if (code === "needs_reauth") return `Reconnect Gmail in claude.ai Settings → Connectors to ${what}.`;
+    if (code === "not_in_manifest" || code === "not_granted" || code === "consent_required") return `Gmail is turned off for this page. Allow it from the page's Permissions menu to ${what}.`;
+    if (code === "approval_required") return `Gmail needs your approval to ${what}. Click again and choose Allow.`;
+    if (code === "blocked_by_policy") return `Your organization blocks this Gmail action.`;
+    if (code === "server_unavailable") return `Gmail did not answer. Try again shortly.`;
+    if (code === "tool_error") return `Gmail reported an error: ${e.message || "unknown"}.`;
+    return `Could not ${what}.`;
+  }
+  function queryFor(i) {
+    const t = [];
+    if (i.email) t.push(`from:${i.email} OR to:${i.email}`);
+    if (i.domain) t.push(`from:${i.domain} OR to:${i.domain}`);
+    if (i.referrerEmail) t.push(`((from:${i.referrerEmail} OR to:${i.referrerEmail}) "${shortFund(i)}")`);
+    return t.length ? "(" + t.join(" OR ") + ")" : "";
+  }
+  const isMine = s => String(s || "").toLowerCase().includes(ME);
+  async function fullMessages(t) {
+    let msgs = t.messages || [];
+    if ((t.messageCount || 0) > msgs.length) {
+      const r = await S.mcp.callTool(GMAIL, "get_thread", { threadId: t.id, messageFormat: "METADATA_ONLY" }, { cache: false });
+      msgs = (r.payload && r.payload.messages) || msgs;
+    }
+    return msgs.filter(m => m && m.date).sort((a, b) => a.date.localeCompare(b.date));
+  }
+  async function scanOne(i) {
+    const q = queryFor(i); if (!q) return null;
+    const r = await S.mcp.callTool(GMAIL, "search_threads", { query: q, pageSize: 6, view: "THREAD_VIEW_METADATA_ONLY" }, { cache: false });
+    const threads = (r.payload && r.payload.threads) || [];
+    let lastIn = null, lastOut = null, newest = null;
+    for (const t of threads) {
+      const msgs = await fullMessages(t);
+      for (const m of msgs) {
+        const d = m.date.slice(0, 10);
+        if (isMine(m.sender)) { if (!lastOut || d > lastOut) lastOut = d; } else { if (!lastIn || d > lastIn) lastIn = d; }
+        if (!newest || m.date > newest.date) newest = { date: m.date, id: m.id, thread: t.id };
+      }
+    }
+    return { lastIn, lastOut, newest };
+  }
+  async function scanAll() {
+    if (!S.mcp) { status("Gmail is not available in this view. Open the page in claude.ai with the Gmail connector added.", true); return; }
+    if (S.scanning) return;
+    S.scanning = true; $("#scanBtn").disabled = true;
+    const rows = S.investors.filter(i => active(i) && queryFor(i));
+    const t = todayISO(); let changed = 0, replies = 0, n = 0, failed = null;
+    for (const i of rows) {
+      n++; status(`Reading Gmail ${n}/${rows.length}: ${i.fund}`);
+      try {
+        const s = await scanOne(i); if (!s) continue;
+        const patch = {}, notes = [];
+        const touch = [s.lastIn, s.lastOut].filter(Boolean).sort().pop() || null;
+        if (touch && touch !== i.lastTouch) { patch.lastTouch = touch; }
+        if (s.lastIn && s.lastIn !== i.lastIn) patch.lastIn = s.lastIn;
+        if (s.lastOut && s.lastOut !== i.lastOut) patch.lastOut = s.lastOut;
+        if (s.newest && s.newest.id !== i.lastMsgId) { patch.lastMsgId = s.newest.id; patch.threadId = s.newest.thread; }
+        const awaiting = !!(s.lastIn && (!s.lastOut || s.lastIn > s.lastOut));
+        if (awaiting !== !!i.awaitingReply) { patch.awaitingReply = awaiting; if (awaiting) { patch.next = t; patch.nextAction = "Reply in Gmail"; notes.push(`Reply received ${fmt(s.lastIn)}; waiting on you.`); replies++; } }
+        if (i.status === "Target" && s.lastOut) { patch.status = "Intro Requested"; patch.next = addDays(s.lastOut, 5); patch.nextAction = "Follow up if no reply"; notes.push(`First touch found in Gmail (${fmt(s.lastOut)}). Stage moved to Intro Requested.`); }
+        if (Object.keys(patch).length) { changed++; await write(i.id, patch, notes.join(" ") || null); }
+      } catch (e) {
+        failed = e;
+        if (["server_not_connected", "needs_reauth", "not_in_manifest", "not_granted", "blocked_by_policy", "selection_required", "consent_required"].includes(e && e.code)) break;
+      }
+    }
+    S.scanning = false; $("#scanBtn").disabled = false;
+    const stamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    if (failed && changed === 0 && n <= 1) status(mcpMessage(failed, "scan Gmail"), true);
+    else { status(`Scan complete: ${rows.length} funds read, ${changed} updated, ${replies} new ${replies === 1 ? "reply" : "replies"}.${failed ? " Some funds could not be read: " + mcpMessage(failed, "read them") : ""}`); }
+    $("#scanState").textContent = `Last run ${stamp} today`;
+    if (S.db) S.db.doc("settings/main").set({ ...S.settings, lastScan: new Date().toISOString() }).catch(() => {});
+  }
+  async function loadThreads(i) {
+    if (!S.mcp) return;
+    S.threads[i.id] = { loading: true }; renderDrawer();
+    try {
+      const r = await S.mcp.callTool(GMAIL, "search_threads", { query: queryFor(i), pageSize: 10, view: "THREAD_VIEW_MINIMAL" }, { cache: false });
+      const items = ((r.payload && r.payload.threads) || []).map(t => {
+        const ms = (t.messages || []).slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+        const last = ms[ms.length - 1] || {};
+        const who = [...new Set(ms.map(m => (m.sender || "").replace(/<.*>/, "").trim()))].slice(0, 3).join(", ");
+        return { viewUrl: t.viewUrl, subject: (ms[0] || {}).subject, date: (last.date || "").slice(0, 10), count: t.messageCount || ms.length, snippet: last.snippet || "", lastMine: isMine(last.sender), who };
+      });
+      S.threads[i.id] = { items };
+    } catch (e) { S.threads[i.id] = { error: mcpMessage(e, "read Gmail") }; }
+    if (S.openId === i.id) renderDrawer();
+  }
+
+  // ---------- add investor ----------
+  function openAdd() {
+    $("#layer").innerHTML = `<div class="scrim" data-close="1"></div><div class="modal"><form class="modal-card" id="addForm">
+      <header>Add investor<button type="button" data-close="1" aria-label="Close">✕</button></header>
+      <div class="mb grid2">
+        <label class="lbl">Fund name<input class="field" id="aFund" required></label>
+        <label class="lbl">Partner name<input class="field" id="aPartner"></label>
+        <label class="lbl">Lead source<input class="field" id="aSource" list="srcList" value="Cold Outreach"></label>
+        <label class="lbl">Status<select class="field" id="aStatus">${STAGES.map(s => `<option>${s}</option>`).join("")}</select></label>
+        <label class="lbl">Next action date<input class="field" id="aNext" type="date" value="${addDays(todayISO(), 1)}"></label>
+        <label class="lbl">Tier<select class="field" id="aTier"><option>1</option><option selected>2</option><option>3</option></select></label>
+        <label class="lbl">Partner email<input class="field" id="aEmail" type="email"></label>
+        <label class="lbl">Fund domain<input class="field" id="aDomain" placeholder="fund.com"></label>
+        <label class="lbl full">Notes<textarea class="field" id="aNotes"></textarea></label>
+        <datalist id="srcList">${[...new Set(["Cold Outreach", "Alumni", ...S.investors.map(x => x.source)])].map(s => `<option value="${esc(s)}">`).join("")}</datalist>
+        <div class="full cmp-actions"><button class="btn primary" type="submit">Add to ledger</button><button class="btn" type="button" data-close="1">Cancel</button></div>
+      </div></form></div>`;
+    $("#aFund").focus();
+  }
+  async function submitAdd(e) {
+    e.preventDefault();
+    if (!S.db) { toast("The ledger is offline."); return; }
+    const fund = $("#aFund").value.trim(); if (!fund) return;
+    const id = fund.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "fund";
+    if (S.investors.some(x => x.id === id)) { toast(`${fund} is already in the ledger.`); return; }
+    const doc = {
+      fund, partner: $("#aPartner").value.trim(), source: $("#aSource").value.trim() || "Cold Outreach", status: $("#aStatus").value,
+      next: $("#aNext").value, nextAction: "", notes: $("#aNotes").value.trim(), email: $("#aEmail").value.trim(), domain: $("#aDomain").value.trim(),
+      referrerEmail: "", tier: +$("#aTier").value, location: "", hook: "", softCircle: 0, lastTouch: "", lastIn: "", lastOut: "", lastMsgId: "", threadId: "",
+      awaitingReply: false, log: [{ t: todayISO(), text: "Added to the ledger." }], updatedAt: new Date().toISOString(),
+    };
+    try { await S.db.collection("investors").doc(id).set(doc); $("#layer").innerHTML = ""; toast(`Added ${fund}.`); S.openId = id; S.dtab = "overview"; renderDrawer(); }
+    catch (err) { toast(err && err.code === "invalid_argument" ? "You have read-only access to this pipeline." : "Could not add the investor. Try again."); }
+  }
+
+  // ---------- chrome ----------
+  let toastT;
+  function toast(msg) {
+    let el = document.querySelector(".toast"); if (!el) { el = document.createElement("div"); el.className = "toast"; el.setAttribute("role", "status"); document.body.append(el); }
+    el.textContent = msg; clearTimeout(toastT); toastT = setTimeout(() => el.remove(), 4200);
+  }
+  function status(msg, err) { const el = $("#statusLine"); el.textContent = msg; el.className = "status-line" + (err ? " err" : ""); }
+  function render() {
+    renderSummary();
+    document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.view === S.view)));
+    $("#view").innerHTML = S.view === "board" ? renderBoard() : S.view === "table" ? renderTable() : renderToday();
+    $("#addBtn").disabled = !S.canWrite || !S.db;
+    $("#scanBtn").disabled = S.scanning || !S.canWrite;
+    if (S.openId) renderDrawer();
+  }
+
+  // ---------- events ----------
+  document.addEventListener("click", e => {
+    const t = e.target.closest("button, [data-close], tr[data-id], a");
+    if (!t) return;
+    if (t.dataset.view) { S.view = t.dataset.view; try { localStorage.setItem("vsp.view", S.view); } catch (_) {} render(); return; }
+    if (t.dataset.close) { S.openId = null; $("#layer").innerHTML = ""; return; }
+    if (t.classList.contains("card") || t.matches("tr[data-id]")) { S.openId = t.dataset.id; S.dtab = "overview"; renderDrawer(); return; }
+    if (t.dataset.open) { S.openId = t.dataset.open; S.dtab = "overview"; renderDrawer(); return; }
+    if (t.dataset.compose) { S.openId = t.dataset.compose; S.dtab = "compose"; renderDrawer(); return; }
+    if (t.dataset.dtab) { S.dtab = t.dataset.dtab; renderDrawer(); const i = cur(); if (S.dtab === "gmail" && i && !S.threads[i.id] && S.mcp && queryFor(i)) loadThreads(i); return; }
+    if (t.dataset.stageSet) { const i = cur(); if (i && i.status !== t.dataset.stageSet) write(i.id, { status: t.dataset.stageSet }, `Stage: ${i.status} → ${t.dataset.stageSet}.`); return; }
+    if (t.dataset.sort) return;
+    if (t.dataset.pick != null) { const i = cur(), c = composeState(i), v = c.variants[+t.dataset.pick]; c.pick = +t.dataset.pick; c.subject = v.subject; c.body = v.body; renderDrawer(); return; }
+    if (t.dataset.del) { confirmDelete(); return; }
+    if (t.id === "addBtn") return openAdd();
+    if (t.id === "scanBtn") return scanAll();
+    if (t.id === "logBtn") { const i = cur(), v = $("#logText").value.trim(); if (i && v) write(i.id, {}, v); return; }
+    if (t.id === "loadThreads") return loadThreads(cur());
+    if (t.id === "useTpl") { const i = cur(), c = composeState(i), d = TEMPLATES[$("#tplSel").value](i); Object.assign(c, { tpl: $("#tplSel").value, to: d.to.join(", "), cc: d.cc.join(", "), subject: d.subject, body: d.body, reply: !!d.reply, variants: null, pick: -1, created: null }); renderDrawer(); return; }
+    if (t.id === "aiBtn") { const i = cur(); composeState(i).tpl = $("#tplSel").value; return writeWithClaude(i); }
+    if (t.id === "mkDraft") return createDraft(cur());
+    if (t.id === "copyBtn") { const c = composeState(cur()); const txt = `Subject: ${c.subject}\n\n${c.body}`; navigator.clipboard?.writeText(txt).then(() => toast("Copied."), () => { $("#cBody").select(); toast("Select-all done; copy with your keyboard."); }); return; }
+    if (t.id === "confirmDel") { const i = cur(); if (i && S.db) S.db.collection("investors").doc(i.id).delete().then(() => { S.openId = null; $("#layer").innerHTML = ""; toast(`Removed ${i.fund}.`); }); return; }
+  });
+  document.addEventListener("click", e => {
+    const th = e.target.closest("th[data-sort]"); if (!th) return;
+    const k = th.dataset.sort; S.sort = { key: k, dir: S.sort.key === k ? -S.sort.dir : 1 }; render();
+  });
+  function confirmDelete() {
+    const box = document.querySelector(".db .cmp-actions"); if (!box) return;
+    box.innerHTML = `<span class="thinking">Remove ${esc(cur().fund)} and its timeline?</span><button class="btn dark" id="confirmDel">Remove</button><button class="btn" data-dtab="overview">Keep</button>`;
+  }
+  const cur = () => S.investors.find(x => x.id === S.openId);
+
+  document.addEventListener("change", e => {
+    const el = e.target;
+    if (el.dataset && el.dataset.f) {
+      const i = cur(); if (!i) return;
+      let v = el.value; if (el.dataset.f === "tier" || el.dataset.f === "softCircle") v = +v || 0;
+      if (String(i[el.dataset.f] ?? "") === String(v)) return;
+      const label = { next: "Next action date", nextAction: "Next action", partner: "Partner", source: "Lead source", email: "Partner email", tier: "Tier", softCircle: "Soft circle" }[el.dataset.f];
+      write(i.id, { [el.dataset.f]: v }, label ? `${label} set to ${el.dataset.f === "next" ? fmt(v) : el.dataset.f === "softCircle" ? money(v) : v || "blank"}.` : null);
+      return;
+    }
+    if (el.id === "fTier") { S.tier = el.value; render(); }
+    if (el.id === "fSource") { S.source = el.value; render(); }
+    if (el.id === "credTog") { S.settings.credentials = el.checked; if (S.db && S.canWrite) S.db.doc("settings/main").set({ ...S.settings }).catch(() => {}); }
+  });
+  let qT;
+  document.addEventListener("input", e => {
+    const el = e.target;
+    if (el.id === "q") { clearTimeout(qT); qT = setTimeout(() => { S.q = el.value; $("#view").innerHTML = S.view === "board" ? renderBoard() : S.view === "table" ? renderTable() : renderToday(); }, 120); }
+    const i = cur(); if (!i || !S.compose[i.id]) return;
+    const c = S.compose[i.id];
+    if (el.id === "cTo") c.to = el.value; else if (el.id === "cCc") c.cc = el.value; else if (el.id === "cSubj") c.subject = el.value; else if (el.id === "cBody") c.body = el.value; else return;
+    relint();
+  });
+  document.addEventListener("submit", e => { if (e.target.id === "addForm") submitAdd(e); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#layer").innerHTML) { S.openId = null; $("#layer").innerHTML = ""; } if (e.key === "Enter" && e.target.id === "logText") $("#logBtn")?.click(); });
+
+  // drag between stages
+  document.addEventListener("dragstart", e => { const c = e.target.closest(".card"); if (c) e.dataTransfer.setData("text/plain", c.dataset.id); });
+  document.addEventListener("dragover", e => { const col = e.target.closest(".col"); if (col && S.canWrite) { e.preventDefault(); document.querySelectorAll(".col.drop").forEach(x => x !== col && x.classList.remove("drop")); col.classList.add("drop"); } });
+  document.addEventListener("dragleave", e => { const col = e.target.closest(".col"); if (col && !col.contains(e.relatedTarget)) col.classList.remove("drop"); });
+  document.addEventListener("drop", e => {
+    const col = e.target.closest(".col"); if (!col) return; e.preventDefault(); col.classList.remove("drop");
+    const id = e.dataTransfer.getData("text/plain"), i = S.investors.find(x => x.id === id), st = col.dataset.stage;
+    if (i && st && i.status !== st) write(i.id, { status: st }, `Stage: ${i.status} → ${st}.`);
+  });
+
+  // ---------- boot ----------
+  try { const v = localStorage.getItem("vsp.view"); if (v) S.view = v; } catch (_) {}
+  render();
+
+  (async () => {
+    if (!window.claude || !window.claude.use) { $("#liveState").innerHTML = `<span class="live-dot"></span>Offline copy`; S.loaded = true; render(); return; }
+    const [db, user, mcp, sample] = await Promise.all(["db", "user", "mcp", "sample"].map(n => window.claude.use(n).catch(() => null)));
+    S.mcp = mcp; S.sample = sample; S.user = user;
+    if (user) { try { const w = await user.can("data.write"); if (w === false) S.canWrite = false; } catch (_) {} }
+    if (!db) { $("#liveState").innerHTML = `<span class="live-dot"></span>Sign in to claude.ai to load the ledger`; S.loaded = true; render(); return; }
+    S.db = db;
+    db.doc("settings/main").onSnapshot(s => { if (s.exists) { const d = s.data(); S.settings = { credentials: d.credentials !== false }; if (d.lastScan) $("#scanState").textContent = "Last run " + new Date(d.lastScan).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } }, () => {});
+    db.collection("investors").onSnapshot(snap => {
+      S.investors = snap.docs.filter(d => d.exists).map(d => ({ id: d.id, ...d.data() }));
+      S.loaded = true;
+      $("#liveState").innerHTML = `<span class="live-dot on"></span>Live · ${S.investors.length} records${S.canWrite ? "" : " · read-only"}`;
+      render();
+    }, err => {
+      $("#liveState").innerHTML = `<span class="live-dot"></span>Ledger disconnected`;
+      status(err && err.code === "revoked" ? "Access to this ledger changed. Reload the page." : "The ledger stopped updating. Reload the page to reconnect.", true);
+    });
+    if (!mcp) $("#scanBtn").title = "Gmail is not available in this view";
+  })();
+})();
+</script>
