@@ -1,4 +1,5 @@
 import datetime as dt
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -54,10 +55,10 @@ class TrackerTests(unittest.TestCase):
     def test_pipeline_file_loads_and_dcvc_is_tracked(self):
         rows = tracker.load()
         dcvc = tracker.find(rows, "DCVC")
-        self.assertEqual(dcvc.lead_source, "Lane Dilg")
-        self.assertEqual(dcvc.status, "Intro Requested")
-        self.assertEqual(dcvc.next_action_date, "2026-10-13")
-        self.assertTrue(dcvc.is_due(TODAY))
+        # Lane is conflicted out of Department-adjacent fundraising, so DCVC needs a new path.
+        self.assertEqual(dcvc.lead_source, "Cold Outreach")
+        self.assertEqual(dcvc.status, "Target")
+        self.assertEqual(dcvc.next_action_date, "2026-10-28")
 
     def test_round_trip(self):
         rows = tracker.load()
@@ -119,14 +120,31 @@ class SyncTests(unittest.TestCase):
         gmail_sync.sync([inv], TODAY, make_drafts=False, service=gmail)
         self.assertEqual(inv.status, "Meeting Set")
 
-    def test_one_referrer_nudge_covers_both_lane_rows_and_is_not_repeated(self):
-        rows = [r for r in tracker.load() if r.lead_source == "Lane Dilg"]
+    def _with_referrers(self, mapping):
+        tmp = tempfile.NamedTemporaryFile("w", suffix=".json", delete=False)
+        json.dump(mapping, tmp)
+        tmp.close()
+        original = gmail_sync.REFERRERS_PATH
+        gmail_sync.REFERRERS_PATH = Path(tmp.name)
+        self.addCleanup(setattr, gmail_sync, "REFERRERS_PATH", original)
+
+    def test_one_referrer_nudge_covers_two_rows_and_is_not_repeated(self):
+        self._with_referrers({"Pat Ally": "pat@example.com"})
+        rows = [tracker.Investor(f, lead_source="Pat Ally", status="Intro Requested",
+                                 next_action_date="2026-10-13", gmail_thread_id="t9") for f in ("Fund A", "Fund B")]
         gmail = FakeGmail([])
         gmail_sync.sync(rows, TODAY, service=gmail)
         self.assertEqual(len(gmail.drafts_made), 1)
-        self.assertEqual(gmail.drafts_made[0]["message"]["threadId"], "1a0f55483428ef5c")
+        self.assertEqual(gmail.drafts_made[0]["message"]["threadId"], "t9")
         gmail_sync.sync(rows, TODAY, service=gmail)  # same day re-run
         self.assertEqual(len(gmail.drafts_made), 1)
+
+    def test_conflicted_referrer_is_never_nudged(self):
+        self._with_referrers({"Lane Dilg": "lane.dilg@gmail.com"})
+        inv = tracker.Investor("DCVC", lead_source="Lane Dilg", status="Intro Requested", next_action_date="2026-10-13")
+        gmail = FakeGmail([])
+        gmail_sync.sync([inv], TODAY, service=gmail)
+        self.assertEqual(gmail.drafts_made, [])
 
     def test_due_row_without_email_is_skipped(self):
         inv = tracker.Investor("Sequoia", partner_name="Shaun Maguire", next_action_date="2026-10-13")

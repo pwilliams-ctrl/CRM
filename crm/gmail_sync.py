@@ -49,8 +49,14 @@ def gmail_service():
     return build("gmail", "v1", credentials=creds)
 
 
+# People who must never be asked for investor intros (24 Oct 2026: Lane Dilg is conflicted
+# out of Department-adjacent fundraising). Listing them here keeps every nudge path off them.
+CONFLICTED = {"lane.dilg@gmail.com"}
+
+
 def load_referrers() -> dict[str, str]:
-    return json.loads(REFERRERS_PATH.read_text()) if REFERRERS_PATH.exists() else {}
+    refs = json.loads(REFERRERS_PATH.read_text()) if REFERRERS_PATH.exists() else {}
+    return {name: email for name, email in refs.items() if email.lower() not in CONFLICTED}
 
 
 def build_query(inv: Investor, referrers: dict[str, str]) -> str | None:
